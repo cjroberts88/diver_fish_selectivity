@@ -8,7 +8,7 @@ regions_shape <- st_read("Data/imcra_provincial_bioregions/imcra4_pb.shp")
 
 plot(regions_shape)
 
-regions_metadata <- data.frame(region_name=regions_shape[[1]],
+regions_metadata <- data.frame(region_name=regions_shape[[1]], geometry=regions_shape[[5]],
                                col.id=1:41)
 
 inat_dat_raw <- read_csv("Data/iNat_AusFish.csv")
@@ -50,5 +50,9 @@ iNat_assigned <- inat_dat %>%
   dplyr::select(-col.id)
 
 
+#calculate distance
+
+
+iNat_assigned$distance <- st_distance(iNat_assigned$geometry, points_sf$geometry,by_element = TRUE)
 
 
