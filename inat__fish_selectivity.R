@@ -41,7 +41,7 @@ points_sf <- st_as_sf(inat_dat, coords = c("final_lng", "final_lat"),
 
 assigned_points <- as.data.frame(st_nearest_feature(points_sf, regions_shape))
 
-iNat_assigned <- bind_cols (assigned_points)
+#iNat_assigned <- bind_cols (assigned_points)
 
 iNat_assigned <- inat_dat %>%
   bind_cols (assigned_points) %>%
@@ -56,3 +56,32 @@ iNat_assigned <- inat_dat %>%
 iNat_assigned$distance <- st_distance(iNat_assigned$geometry, points_sf$geometry,by_element = TRUE)
 
 
+inat_old_raw <- read_csv("Data/iNat_AusFish_old_wth_fam.csv")
+
+inat_taxon <- inat_old_raw%>%
+  distinct(., scientific_name, .keep_all = TRUE)%>%
+  select(c(38, 49,52))
+
+ iNat_assigned <-   left_join(iNat_assigned, inat_taxon, by='scientific_name')
+ 
+ inat_species_list <- inat_old_raw %>%
+  distinct(., scientific_name, .keep_all = FALSE) 
+ 
+ inat_species_list_2 <- inat_species_list[[1]]
+ 
+
+rfishbase::species(species_list=inat_species_list_2, fields = 'Fresh') -> freshwater
+rfishbase::species(species_list=inat_species_list_2, fields = 'Saltwater') -> marine
+rfishbase::species(species_list=inat_species_list_2, fields = 'Brack') -> brackish
+
+species_habitat <-   bind_cols(freshwater, marine,brackish)
+species_habitat$fresh_only <- abs(species_habitat$Fresh)+species_habitat$Saltwater+species_habitat$Brack
+
+species_habitat$fresh_only <- sub(-1, 0, species_habitat$fresh_only)
+species_habitat$fresh_only <- sub(-2, 0, species_habitat$fresh_only)
+
+species_habitat <-   bind_cols(inat_species_list, species_habitat)
+
+species_habitat <-   species_habitat[,-(2:4)]
+
+iNat_assigned <-   left_join(iNat_assigned, species_habitat, by='scientific_name')
