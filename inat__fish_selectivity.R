@@ -3,10 +3,11 @@ library(sf)
 library(dplyr)
 library(readr)
 library(stringr)
+#install.packages("lwgeom")
 
 regions_shape <- st_read("Data/imcra_provincial_bioregions/imcra4_pb.shp")
 
-plot(regions_shape)
+#plot(regions_shape)
 
 regions_metadata <- data.frame(region_name=regions_shape[[1]], geometry=regions_shape[[5]],
                                col.id=1:41)
@@ -21,14 +22,21 @@ inat_dat <- inat_dat_raw %>%
   filter('field:diving, snorkeling, angling, shore etc' !='washup')%>%
   filter(coordinates_obscured !='TRUE'|private_latitude!='')  # remove obscured co-ordinates that have no private lat long. 
 
+
+
 # keep eggs?
 # remove washups? ie dead fish on beaches - could potentially be from  outside a region.
 ## removing obscured necessary? point is within 0.2 decrees -> ~20km
+
+#copy private lat/long to lat/long
 
 inat_dat <-  inat_dat %>%
   mutate(final_lat=ifelse(is.na(private_latitude)=="TRUE", latitude, private_latitude)) %>%
   mutate(final_lng=ifelse(is.na(private_longitude)=="TRUE", longitude, private_longitude)) %>%
   dplyr::filter(complete.cases(final_lat))
+
+#reduce data frame to relevant variables
+inat_dat <- select(inat_dat, id, observed_on, url, final_lat, final_lng, scientific_name, common_name)
 
 
 
@@ -55,6 +63,8 @@ iNat_assigned <- inat_dat %>%
 
 iNat_assigned$distance <- st_distance(iNat_assigned$geometry, points_sf$geometry,by_element = TRUE)
 
+rm(regions_metadata)
+iNat_assigned <- select(iNat_assigned, -geometry)
 
 inat_old_raw <- read_csv("Data/iNat_AusFish_old_wth_fam.csv")
 
@@ -75,6 +85,7 @@ rfishbase::species(species_list=inat_species_list_2, fields = 'Saltwater') -> ma
 rfishbase::species(species_list=inat_species_list_2, fields = 'Brack') -> brackish
 
 species_habitat <-   bind_cols(freshwater, marine,brackish)
+
 species_habitat$fresh_only <- abs(species_habitat$Fresh)+species_habitat$Saltwater+species_habitat$Brack
 
 species_habitat$fresh_only <- sub(-1, 0, species_habitat$fresh_only)
@@ -85,3 +96,9 @@ species_habitat <-   bind_cols(inat_species_list, species_habitat)
 species_habitat <-   species_habitat[,-(2:4)]
 
 iNat_assigned <-   left_join(iNat_assigned, species_habitat, by='scientific_name')
+
+iNat_assigned <- iNat_assigned %>% filter(is.na(fresh_only)| fresh_only==0)
+
+iNat_assigned$distance <- as.numeric(iNat_assigned$distance)
+
+iNat_assigned <- iNat_assigned %>% filter(distance<15000)
