@@ -1,0 +1,127 @@
+"","scientific_name","match(iNat_master_list$scientific_name, IMCRA_species_all$Species, nomatch = 0)"
+"1","Gobiomorphus australis",0
+"2","Corythoichthys flavofasciatus",0
+"3","Myripristis amaena",0
+"4","Chrysiptera parasema",0
+"5","Thalassoma amblycephalum",0
+"6","Monotaxis heterodon",0
+"7","Centropyge cocosensis",0
+"8","Pterois miles",0
+"9","Gambusia holbrooki",0
+"10","Cyprinus carpio",0
+"11","Mobula alfredi",0
+"12","Scolopsis aurata",0
+"13","Tylosurus crocodilus",0
+"14","Chromis dimidiata",0
+"15","Zebrasoma velifer",0
+"16","Cromileptes altivelis",0
+"17","Poecilia reticulata",0
+"18","Sufflamen chrysopterum",0
+"19","Carassius auratus",0
+"20","Plectorhinchus picus",0
+"21","Oreochromis mossambicus",0
+"22","Ellochelon vaigiensis",0
+"23","Giuris margaritacea",0
+"24","Sphyraena flavicauda",0
+"25","Salmo trutta",0
+"26","Ostorhinchus moluccensis",0
+"27","Paracaesio xanthura",0
+"28","Plectroglyphidodon leucozonus",0
+"29","Thysanophrys cirronasa",0
+"30","Conger wilsoni",0
+"31","Caesioperca lepidoptera",0
+"32","Meuschenia scaber",0
+"33","Koumansetta rainfordi",0
+"34","Canthigaster callisterna",0
+"35","Eleutheronema tetradactylum",0
+"36","Chaetodon guttatissimus × chaetodon punctatofasciatus",0
+"37","Gnatholepis cauerensis cauerensis",0
+"38","Scorpaenopsis oxycephala",0
+"39","Mola alexandrini",0
+"40","Ptereleotris heteroptera",0
+"41","Nemadactylus macropterus",0
+"42","Sphaeramia nematoptera",0
+"43","Notesthes robusta",0
+"44","Amblyeleotris periophthalma",0
+"45","Diagramma labiosum",0
+"46","Heteropriacanthus carolinus",0
+"47","Chromis flavomaculata",0
+"48","Cheilodipterus isostigmus",0
+"49","Taeniamia biguttata",0
+"50","Paracentropyge multifasciata",0
+"51","Antennarius nummifer",0
+"52","Trygonorrhina dumerilii × fasciata",0
+"53","Arripis truttacea",0
+"54","Galaxiella toourtkoourt",0
+"55","Arotrolepis filicauda",0
+"56","Zoramia leptacantha",0
+"57","Hyporthodus ergastularius",0
+"58","Abalistes stellaris",0
+"59","Helotes octolineatus",0
+"60","Oncorhynchus mykiss",0
+"61","Canthigaster janthinoptera",0
+"62","Eptatretus cirrhatus",0
+"63","Diagramma pictum labiosum",0
+"64","Hippocampus",0
+"65","Pseudomugil gertrudae",0
+"66","Melanotaenia splendida splendida",0
+"67","Plectorhinchus schotaf",0
+"68","Doryrhamphus excisus",0
+"69","Sillago burrus",0
+"70","Parapercis tetracantha",0
+"71","Trachinocephalus myops",0
+"72","Cirripectes auritus",0
+"73","Stigmatopora",0
+"74","Acanthurus olivaceus × tennentii",0
+"75","Mobula kuhlii",0
+"76","Plectranthias kamii",0
+"77","Chaetodon pelewensis × punctofasciatus",0
+"78","Teixeirichthys jordani",0
+"79","Acentrogobius nebulosus",0
+"80","Yongeichthys criniger",0
+"81","Wuhanlinigobius polylepis",0
+"82","Plesiops nigricans",0
+"83","Paraplagusia guttata",0
+"84","Mugilogobius platystomus",0
+"85","Atherinosoma elongata",0
+"86","Planiliza subviridis",0
+"87","Squalomugil nasutus",0
+"88","Cyprinus rubrofuscus",0
+"89","Pelmatolapia mariae",0
+"90","Dermatopsis multiradiatus",0
+"91","Sympterichthys politus",0
+"92","Paragobiodon melanosomus",0
+"93","Gracilimugil argenteus",0
+"94","Parupeneus heptacanthus",0
+"95","Plectropomus",0
+"96","Heteroclinus",0
+"97","Centropyge cocosensis × eibli",0
+"98","Mola tecta",0
+"99","Etrumeus sadina",0
+"100","Foa",0
+"101","Urogymnus dalyensis",0
+"102","Geotria australis",0
+"103","Nemadactylus",0
+"104","Scuticaria tigrina",0
+"105","Acanthurus nigricans × leucosternon",0
+"106","Idiotropiscis australe",0
+"107","Kuhlia marginata",0
+"108","Planiliza alata",0
+"109","Geophagus brasiliensis",0
+"110","Gymnocranius superciliosus",0
+"111","Haliichthys taeniophorus",0
+"112","Soleichthys",0
+"113","Gambusia affinis",0
+"114","Echinocardium cordatum",0
+"115","Neoglyphidodon thoracotaeniatus",0
+"116","Linckia laevigata",0
+"117","Eviota teresae",0
+"118","Mola",0
+"119","Branchellion borealis",0
+"120","Periophthalmus",0
+"121","Suezichthys gracilis",0
+"122","Amaryllis philatelica",0
+"123","Narcinops westraliensis",0
+"124","Callionymus macdonaldi",0
+"125","Amblyeleotris gymnocephala",0
+"126","Synchiropus morrisoni",0

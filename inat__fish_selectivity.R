@@ -3,6 +3,9 @@ library(sf)
 library(dplyr)
 library(readr)
 library(stringr)
+library(tidyverse)
+library(ggplot2)
+#install.packages("tidyverse", dependencies = TRUE )
 #install.packages("lwgeom")
 
 regions_shape <- st_read("Data/imcra_provincial_bioregions/imcra4_pb.shp")
@@ -13,7 +16,8 @@ regions_metadata <- data.frame(region_name=regions_shape[[1]], geometry=regions_
                                col.id=1:41)
 
 inat_dat_raw <- read_csv("Data/iNat_AusFish.csv")
-
+FW_specieslist <- read_csv("Data/FW_as_adults.csv")
+AFD_All_regions_species <- read_csv("Outputs/AFD_species_by_region.csv")
 
 
 inat_dat <- inat_dat_raw %>% 
@@ -80,25 +84,83 @@ inat_taxon <- inat_old_raw%>%
  inat_species_list_2 <- inat_species_list[[1]]
  
 
-rfishbase::species(species_list=inat_species_list_2, fields = 'Fresh') -> freshwater
-rfishbase::species(species_list=inat_species_list_2, fields = 'Saltwater') -> marine
-rfishbase::species(species_list=inat_species_list_2, fields = 'Brack') -> brackish
+#rfishbase::species(species_list=inat_species_list_2, fields = 'Fresh') -> freshwater
+#rfishbase::species(species_list=inat_species_list_2, fields = 'Saltwater') -> marine
+#rfishbase::species(species_list=inat_species_list_2, fields = 'Brack') -> brackish
 
-species_habitat <-   bind_cols(freshwater, marine,brackish)
+#species_habitat <-   bind_cols(freshwater, marine,brackish)
 
-species_habitat$fresh_only <- abs(species_habitat$Fresh)+species_habitat$Saltwater+species_habitat$Brack
+#species_habitat$fresh_only <- abs(species_habitat$Fresh)+species_habitat$Saltwater+species_habitat$Brack
 
-species_habitat$fresh_only <- sub(-1, 0, species_habitat$fresh_only)
-species_habitat$fresh_only <- sub(-2, 0, species_habitat$fresh_only)
+#species_habitat$fresh_only <- sub(-1, 0, species_habitat$fresh_only)
+#species_habitat$fresh_only <- sub(-2, 0, species_habitat$fresh_only)
 
-species_habitat <-   bind_cols(inat_species_list, species_habitat)
+#species_habitat <-   bind_cols(inat_species_list, species_habitat)
 
-species_habitat <-   species_habitat[,-(2:4)]
+#species_habitat <-   species_habitat[,-(2:4)]
 
-iNat_assigned <-   left_join(iNat_assigned, species_habitat, by='scientific_name')
+#iNat_assigned <-   left_join(iNat_assigned, species_habitat, by='scientific_name')
 
-iNat_assigned <- iNat_assigned %>% filter(is.na(fresh_only)| fresh_only==0)
+#iNat_assigned <- iNat_assigned %>% filter(is.na(fresh_only)| fresh_only==0)
+ 
+ FW_specieslist$fresh_only <- "1"
+iNat_assigned_SW <-   left_join(iNat_assigned, FW_specieslist, by='scientific_name')
 
-iNat_assigned$distance <- as.numeric(iNat_assigned$distance)
+iNat_assigned_SW$distance <- as.numeric(iNat_assigned_SW$distance)
+iNat_assigned_SW <- iNat_assigned_SW %>% filter(is.na(fresh_only))
 
-iNat_assigned <- iNat_assigned %>% filter(distance<15000)
+iNat_assigned_SW <- iNat_assigned_SW %>% filter(distance<15000)
+
+iNat_assigned_SW_sml <-select(iNat_assigned_SW, scientific_name, region_name)
+iNat_assigned_SW_sml$Dataset <- "iNat"
+
+iNat_master_list <- distinct(iNat_assigned,scientific_name)
+
+#IMCRA SPECIES LISTS
+
+IMCRA_master_list <- read_csv("Data/species_lists/AFD-All regions combined.csv")
+
+IMCRA_species_all <- IMCRA_master_list %>% 
+  unite(., GENUS, SPECIES, col="Species",sep=" ")%>%
+  select(., "Species")
+
+
+#iNat species not in IMCRA - ??? old code may be worth rerunning this check at some point
+
+#match_indx_iNat <- as.data.frame(match(iNat_master_list$scientific_name, IMCRA_species_all$Species,  nomatch = 0))
+
+#Global species matching
+
+#iNat_IMCRA_match <- bind_cols(iNat_master_list, match_indx_iNat)
+#iNat_IMCRA_match <- filter(iNat_IMCRA_match, iNat_IMCRA_match[[2]] == 0)
+
+#write.csv(iNat_IMCRA_match, file = "Outputs/iNat_IMCRA_match.csv")
+
+
+# old code -> redundant?
+#IMCRA species found/not by INat 
+#match_indx <- as.data.frame(match(IMCRA_species_all$Species, iNat_master_list$scientific_name, nomatch = 0))
+#Global species matching
+#IMCRA_iNat_match <- bind_cols(IMCRA_species_all, match_indx)
+
+
+
+
+#IMCRA FW species in AFD species by region
+
+match_indx_FW <- as.data.frame(match(AFD_All_regions_species$scientific_name, FW_specieslist$scientific_name, nomatch = 0))
+match_indx_FW <- rename(match_indx_FW, FW_match = 'match(AFD_All_regions_species$scientific_name, FW_specieslist$scientific_name, nomatch = 0)')
+#Global species matching
+AFD_All_regions_species_FW_SW <- bind_cols(AFD_All_regions_species, match_indx_FW)
+AFD_All_regions_species_SW <- filter(AFD_All_regions_species_FW_SW, FW_match == 0)
+
+AFD_All_regions_species_SW_sml <-select(AFD_All_regions_species_SW, scientific_name, region_name)
+AFD_All_regions_species_SW_sml$Dataset <- "AFD"
+
+iNat_AFD_regions <- bind_rows(AFD_All_regions_species_SW_sml, iNat_assigned_SW_sml)
+iNat_AFD_regions <- unique(iNat_AFD_regions)
+
+ggplot(data=iNat_AFD_regions, aes(iNat_AFD_regions$region_name)) + 
+  geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
+  theme(axis.text.x = element_text(angle = 90))
+
