@@ -1,4 +1,5 @@
 # packages
+
 library(sf)
 library(dplyr)
 library(readr)
@@ -164,3 +165,31 @@ ggplot(data=iNat_AFD_regions, aes(iNat_AFD_regions$region_name)) +
   geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
   theme(axis.text.x = element_text(angle = 90))
 
+# getting midpoints of shapes
+centroids <- st_centroid(regions_shape$geometry)
+xy_coords <- do.call(rbind, st_geometry(centroids)) %>% 
+  as_tibble() %>% setNames(c("lon","lat"))
+regions_shape2 <- as.data.frame(regions_shape$PB_NAME)
+#force join
+regions_shape2 <- merge(regions_shape2,xy_coords)
+
+regions_shape2 <- rename(regions_shape2, region_name='regions_shape$PB_NAME')
+regions_shape2 <- left_join(regions_shape2,summary, by="region_name")
+
+summary <- iNat_AFD_regions %>% 
+  group_by(region_name,Dataset)%>%
+  summarise(species=n_distinct(scientific_name))
+
+ggplot(data=summary, aes(species)) + 
+  geom_scatterpie(aes(fill = Dataset), position = "dodge", stat="count") + 
+  theme(axis.text.x = element_text(angle = 90))
+
+#geom scatterpie not available in this R version?
+
+install.packages("geom_scatterpie")
+library(geom_scatterpie)
+ggplot() + geom_scatterpie(aes(x=lon, y=lat, 
+                               group=species, 
+                            ), 
+                           data=regions_shape2,                                 
+                           ) + coord_equal()
