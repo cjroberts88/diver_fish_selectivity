@@ -83,11 +83,34 @@ inat_taxon <- inat_old_raw%>%
   distinct(., scientific_name, .keep_all = FALSE) 
  
  inat_species_list_2 <- inat_species_list[[1]]
- 
+ IMCRA_species_all_2 <- IMCRA_species_all[[1]]
 
-#rfishbase::species(species_list=inat_species_list_2, fields = 'Fresh') -> freshwater
+rfishbase::species(species_list=inat_species_list_2, fields = 'Fresh') -> freshwater
 #rfishbase::species(species_list=inat_species_list_2, fields = 'Saltwater') -> marine
 #rfishbase::species(species_list=inat_species_list_2, fields = 'Brack') -> brackish
+
+rfishbase::list_fields() -> fishbase_fields
+
+rfishbase::ecology(species_list=inat_species_list_2, fields = 'Pelagic') -> Pelagic
+
+rfishbase::ecology(species_list=inat_species_list_2, fields = 'Bathypelagic') -> Bathypelagic
+
+
+rfishbase::ecology(species_list=IMCRA_species_all_2,fields =  c('Pelagic','Bathypelagic', 'Abyssopelagic','Epipelagic', 'Hadopelagic', 'Mesopelagic')) -> Pelagic_All_AFD
+
+rfishbase::species(species_list=IMCRA_species_all_2, fields = 'DepthRangeDeep') -> Deep 
+rfishbase::species(species_list=IMCRA_species_all_2, fields = 'DepthRangeShallow') -> Shallow 
+
+AFD_Shallow <- bind_cols(IMCRA_species_all, Shallow)
+
+Pelagic_All_AFD <-   bind_cols(IMCRA_species_all, Pelagic_All_AFD)
+
+Pelagic_All_AFD$Pelagic_comb <- Pelagic_All_AFD$Pelagic +Pelagic_All_AFD$Bathypelagic+Pelagic_All_AFD$Abyssopelagic+Pelagic_All_AFD$Epipelagic+Pelagic_All_AFD$Hadopelagic+Pelagic_All_AFD$Mesopelagic
+
+Nonpelagic_AFD <- Pelagic_All_AFD %>% 
+  filter(is.na(Pelagic_comb)|Pelagic_comb==0)
+
+AFD_Shallow <- AFD_Shallow  %>%  filter(is.na(DepthRangeShallow)|DepthRangeShallow<31)
 
 #species_habitat <-   bind_cols(freshwater, marine,brackish)
 
@@ -104,7 +127,7 @@ inat_taxon <- inat_old_raw%>%
 
 #iNat_assigned <- iNat_assigned %>% filter(is.na(fresh_only)| fresh_only==0)
  
- FW_specieslist$fresh_only <- "1"
+FW_specieslist$fresh_only <- "1"
 iNat_assigned_SW <-   left_join(iNat_assigned, FW_specieslist, by='scientific_name')
 
 iNat_assigned_SW$distance <- as.numeric(iNat_assigned_SW$distance)
@@ -165,6 +188,75 @@ ggplot(data=iNat_AFD_regions, aes(iNat_AFD_regions$region_name)) +
   geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
   theme(axis.text.x = element_text(angle = 90))
 
+#Removing pelagics....
+
+match_indx_Pel <- as.data.frame(match(AFD_All_regions_species_SW_sml$scientific_name, Nonpelagic_AFD$Species, nomatch = 0))
+match_indx_Pel <- rename(match_indx_Pel, Non_Pel_match = 'match(AFD_All_regions_species_SW_sml$scientific_name, Nonpelagic_AFD$Species, nomatch = 0)')
+#Global species matching
+AFD_All_regions_species_SW_incPela <- bind_cols(AFD_All_regions_species_SW_sml, match_indx_Pel)
+AFD_All_regions_species_SW_noPela <- filter(AFD_All_regions_species_SW_incPela, Non_Pel_match != 0)
+
+AFD_All_regions_species_SW_noPela <-select(AFD_All_regions_species_SW_noPela, -Non_Pel_match)
+#AFD_All_regions_species_SW_sml$Dataset <- "AFD"
+
+####STILL NEED TO REMOVE PELAGICS FROM INAT####
+iNat_AFD_regions_noPela <- bind_rows(AFD_All_regions_species_SW_noPela, iNat_assigned_SW_sml)
+iNat_AFD_regions_noPela <- unique(iNat_AFD_regions_noPela)
+
+ggplot(data=iNat_AFD_regions_noPela, aes(iNat_AFD_regions_noPela$region_name)) + 
+  geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
+  coord_flip()+
+  theme(axis.text.x = element_text(angle = 90,hjust=0.98,vjust=0.4)) + 
+  theme(axis.text.y = element_text(angle = 0,hjust=0.98,vjust=0.3))
+
+#Removing Deeps from AFD
+
+
+match_indx_Shallow <- as.data.frame(match(AFD_All_regions_species_SW_sml$scientific_name, AFD_Shallow$Species, nomatch = 0))
+match_indx_Shallow <- rename(match_indx_Shallow, Shallow_match = 'match(AFD_All_regions_species_SW_sml$scientific_name, AFD_Shallow$Species, nomatch = 0)')
+#Global species matching
+AFD_All_regions_species_SW_incDeep <- bind_cols(AFD_All_regions_species_SW_sml, match_indx_Shallow)
+AFD_All_regions_species_SW_exDeep <- filter(AFD_All_regions_species_SW_incDeep, Shallow_match != 0)
+
+AFD_All_regions_species_SW_noDeep <-select(AFD_All_regions_species_SW_exDeep, -Shallow_match)
+#AFD_All_regions_species_SW_sml$Dataset <- "AFD"
+
+####STILL NEED TO REMOVE PELAGICS FROM INAT####
+iNat_AFD_regions_noDeep <- bind_rows(AFD_All_regions_species_SW_noDeep, iNat_assigned_SW_sml)
+iNat_AFD_regions_noDeep <- unique(iNat_AFD_regions_noDeep)
+
+ggplot(data=iNat_AFD_regions_noDeep, aes(iNat_AFD_regions_noDeep$region_name)) + 
+  geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
+  coord_flip()+
+  theme(axis.text.x = element_text(angle = 90,hjust=0.98,vjust=0.4)) + 
+  theme(axis.text.y = element_text(angle = 0,hjust=0.98,vjust=0.3))
+
+
+###REMOVE BOTH deep and pelagics?
+
+
+AFD_All_regions_species_SW_Deep_Pela <- bind_cols(AFD_All_regions_species_SW_incDeep, AFD_All_regions_species_SW_incPela)
+AFD_All_regions_species_SW_exDeep_Pela <- filter(AFD_All_regions_species_SW_Deep_Pela, Shallow_match != 0)
+AFD_All_regions_species_SW_exDeep_exPela <- filter(AFD_All_regions_species_SW_exDeep_Pela, Non_Pel_match != 0)
+
+AFD_All_regions_species_SW_exDeep_exPela <-select(AFD_All_regions_species_SW_exDeep_exPela, -Shallow_match)
+AFD_All_regions_species_SW_exDeep_exPela <-select(AFD_All_regions_species_SW_exDeep_exPela, -Non_Pel_match)
+#AFD_All_regions_species_SW_sml$Dataset <- "AFD"
+
+####STILL NEED TO REMOVE PELAGICS FROM INAT####
+iNat_AFD_regions_exDeep_exPela <- bind_rows(AFD_All_regions_species_SW_exDeep_exPela, iNat_assigned_SW_sml)
+iNat_AFD_regions_exDeep_exPela  <- unique(iNat_AFD_regions_exDeep_exPela)
+
+ggplot(data=iNat_AFD_regions_exDeep_exPela, aes(iNat_AFD_regions_exDeep_exPela$region_name)) + 
+  geom_histogram(aes(fill = Dataset), position = "dodge", stat="count") + 
+   coord_flip()+
+  theme(axis.text.x = element_text(angle = 90,hjust=0.98,vjust=0.4)) + 
+  theme(axis.text.y = element_text(angle = 0,hjust=0.98,vjust=0.3))
+
+theme(axis.text.x=element_text(size=15, angle=90,hjust=0.95,vjust=0.2)
+
+      
+  Regions_centre
 # getting midpoints of shapes
 centroids <- st_centroid(regions_shape$geometry)
 xy_coords <- do.call(rbind, st_geometry(centroids)) %>% 
@@ -192,4 +284,7 @@ ggplot() + geom_scatterpie(aes(x=lon, y=lat,
                                group=species, 
                             ), 
                            data=regions_shape2,                                 
-                           ) + coord_equal()
+                           ) + coord_equal()    
+
+
+      
