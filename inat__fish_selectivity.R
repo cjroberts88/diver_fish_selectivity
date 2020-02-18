@@ -258,33 +258,73 @@ theme(axis.text.x=element_text(size=15, angle=90,hjust=0.95,vjust=0.2)
       
   Regions_centre
 # getting midpoints of shapes
+  #regions_shape3<-regions_shape
+#regions_shape3$centroids <- st_centroid(regions_shape$geometry)
+regions_centroids <- select(regions_shape3, "PB_NAME", "centroids")
 centroids <- st_centroid(regions_shape$geometry)
 xy_coords <- do.call(rbind, st_geometry(centroids)) %>% 
   as_tibble() %>% setNames(c("lon","lat"))
 regions_shape2 <- as.data.frame(regions_shape$PB_NAME)
 #force join
-regions_shape2 <- merge(regions_shape2,xy_coords)
+regions_shape2 <- bind_cols(regions_shape2,xy_coords)
 
 regions_shape2 <- rename(regions_shape2, region_name='regions_shape$PB_NAME')
-regions_shape2 <- left_join(regions_shape2,summary, by="region_name")
+#regions_shape2 <- left_join(regions_shape2,summary, by="region_name")
 
 summary <- iNat_AFD_regions %>% 
   group_by(region_name,Dataset)%>%
   summarise(species=n_distinct(scientific_name))
-
-ggplot(data=summary, aes(species)) + 
-  geom_scatterpie(aes(fill = Dataset), position = "dodge", stat="count") + 
-  theme(axis.text.x = element_text(angle = 90))
-
-#geom scatterpie not available in this R version?
-
-install.packages("geom_scatterpie")
-library(geom_scatterpie)
-ggplot() + geom_scatterpie(aes(x=lon, y=lat, 
-                               group=species, 
-                            ), 
-                           data=regions_shape2,                                 
-                           ) + coord_equal()    
+summary_wide <- pivot_wider(summary, names_from=Dataset,values_from = species)
+summary_wide[is.na(summary_wide)] <- 0
+summary_wide$Not_recorded <- summary_wide$AFD-summary_wide$iNat
+summary_wide <- select(summary_wide, -AFD)
+summary_wide_all <- left_join(summary_wide,regions_shape2)
+summary_long_all <- summary_wide_all %>% pivot_longer(2:3,names_to = "variable", values_to = "species")
+summary_long_all <- filter(summary_long_all, region_name!="Macquarie Island Province")
 
 
-      
+
+
+
+install.packages("maps")
+install.packages("mapdata")
+install.packages("mapplots")
+library(maps)
+library(mapdata)
+library(mapplots)
+
+
+  
+
+# The area of the Bicol Region;
+xlim <- c(90,158)
+ylim <- c(-47,-9)
+
+# Creates an xyz object for use with the function draw.pie
+xyz <- make.xyz(summary_long_all$lon, summary_long_all$lat,  summary_long_all$species, summary_long_all$variable)
+
+# Colors used
+col <- c("#003366", "#CCCC66", "#CC3366")
+
+# The plot of the pie chart above the map
+tiff("pie-on-map.tiff", width = 8, height = 5.5, units = "in",
+     res = 200, type = "cairo")
+par(mai = c(0.5, 0.5, 0.35, 0.2), omi = c(0.25, 0.5, 0, 0),
+    mgp = c(2.5, 0.5, 0), family = "Liberation Serif")
+basemap(xlim = c(90,158), ylim = c(-47,-9), bg = "white",
+        main = "Distribution of iNat Observations compared to AFD")
+map('world2Hires', xlim = xlim, ylim = ylim, add = TRUE)
+draw.pie(xyz$x, xyz$y, xyz$z, radius = 1.1, col = col)
+legend.pie(105, -40, labels = c("in iNat", "Not in iNat"), 
+           radius = 5, bty = "n", col = col, cex = 0.8, label.dist = 1.3)
+# TO ADD TEXT TO MAP
+#text(121.5, 12.1, "Tuna Species:", cex = 0.8, font = 2)
+
+dev.off()
+
+
+
+
+
+  
+
